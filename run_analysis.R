@@ -40,16 +40,14 @@
 #
 library(dplyr)
 library(tidyr)
-#Download Data
 
+#Download Data
 url <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
 if (!file.exists("week4project.zip")) {
 download.file(url,destfile = "week4project.zip")
 } else print("File already downloaded")
 
 #open data
-
-#metadatazip <- unzip("week4project.zip", list = TRUE)
 
 #/UCI HAR Dataset
 unzip("week4project.zip", exdir = "week4projectunzip")
@@ -86,17 +84,17 @@ colnames(activitylabelvect) <- "Activity"
 alldata2 <- bind_cols(activitylabelvect, alldata)
 
 #2)Extracts the mean and standard deviation for each measurement.
-extractvect <- grep("mean|std", features, ignore.case = TRUE)
-extractvect2 <- extractvect + 4
-extractvect2 <- append(1:4, extractvect2)
+extractlogical <- grepl("-mean()|-std()", features, ignore.case = TRUE)
+notextractlogical <- grepl("-meanFreq()", features)
+extractvect <- xor(extractlogical,notextractlogical)
+extractvect2 <- features[extractvect]
+extractvect2 <- append(colnames(alldata2[1:4]), extractvect2)
 part4dataset <- alldata2[ , extractvect2]
-#data might be too inclusive of mean and std using ignore case = True?
-#would rather have all variables than exclude one
 
 #Part 5)From the data set in step 4, creates a second, independent tidy data set 
 #with the average of each variable for each activity and each subject.
 
-tidydata <- gather(part4dataset, "Variable", "Value", 5:90) %>% group_by(Group, Activity, Subject_ID, Variable) %>% summarise(Mean = mean(Value))
+tidydata <- gather(part4dataset, "Variable", "Value", 5:70) %>% group_by(Group, Activity, Subject_ID, Variable) %>% summarise(Mean = mean(Value))
 if (!file.exists("Tidy Data Set.txt")) {
   write.table(tidydata, file = "Tidy Data Set.txt", row.names = FALSE)
 } else print("Tidy Data Set file already exists")
